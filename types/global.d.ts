@@ -71,6 +71,7 @@ declare global {
         id: string;
         name: string;
         email: string;
+        image?: string;
     };
 
     type Stock = {
@@ -98,7 +99,7 @@ declare global {
 
     type StockDetailsPageProps = {
         params: Promise<{
-            symbol: string;
+            symbols: string;
         }>;
     };
 
