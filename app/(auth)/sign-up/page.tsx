@@ -34,11 +34,21 @@ const SignUp = () => {
     const onSubmit = async (data: SignUpFormData) => {
         try {
             const result = await signUpWithEmail(data);
-            if(result.success) router.push('/');
+            if(result.success) {
+                toast.success('Account created successfully!', {
+                    description: 'Please sign in with your credentials.'
+                });
+                // Redirect to sign-in page after successful sign-up
+                router.push('/sign-in?fromSignUp=true');
+            } else {
+                toast.error('Sign up failed', {
+                    description: result.error || 'Failed to create an account. Please try again.'
+                });
+            }
         } catch (e) {
-            console.error(e);
+            console.error('Sign up error:', e);
             toast.error('Sign up failed', {
-                description: e instanceof Error ? e.message : 'Failed to create an account.'
+                description: e instanceof Error ? e.message : 'An unexpected error occurred. Please try again.'
             })
         }
     }
@@ -60,10 +70,16 @@ const SignUp = () => {
                 <InputField
                     name="email"
                     label="Email"
-                    placeholder="contact@jsmastery.com"
+                    placeholder="contact@example.com"
                     register={register}
                     error={errors.email}
-                    validation={{ required: 'Email name is required', pattern: /^\w+@\w+\.\w+$/, message: 'Email address is required' }}
+                    validation={{ 
+                        required: 'Email is required', 
+                        pattern: {
+                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                            message: 'Please enter a valid email address'
+                        }
+                    }}
                 />
 
                 <InputField
@@ -73,7 +89,17 @@ const SignUp = () => {
                     type="password"
                     register={register}
                     error={errors.password}
-                    validation={{ required: 'Password is required', minLength: 8 }}
+                    validation={{ 
+                        required: 'Password is required', 
+                        minLength: {
+                            value: 8,
+                            message: 'Password must be at least 8 characters long'
+                        },
+                        pattern: {
+                            value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                            message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+                        }
+                    }}
                 />
 
                 <CountrySelectField

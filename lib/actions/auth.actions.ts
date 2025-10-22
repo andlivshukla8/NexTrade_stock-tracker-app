@@ -9,16 +9,23 @@ export const signUpWithEmail = async ({ email, password, fullName, country, inve
         const response = await auth.api.signUpEmail({ body: { email, password, name: fullName } })
 
         if(response) {
-            await inngest.send({
-                name: 'app/user.created',
-                data: { email, name: fullName, country, investmentGoals, riskTolerance, preferredIndustry }
-            })
+            // Send welcome email asynchronously
+            try {
+                await inngest.send({
+                    name: 'app/user.created',
+                    data: { email, name: fullName, country, investmentGoals, riskTolerance, preferredIndustry }
+                })
+            } catch (emailError) {
+                console.error('Failed to send welcome email:', emailError)
+                // Don't fail signup if email fails
+            }
         }
 
         return { success: true, data: response }
-    } catch (e) {
-        console.log('Sign up failed', e)
-        return { success: false, error: 'Sign up failed' }
+    } catch (e: any) {
+        console.error('Sign up failed:', e)
+        const errorMessage = e?.message || 'Sign up failed. Please try again.'
+        return { success: false, error: errorMessage }
     }
 }
 
@@ -27,17 +34,20 @@ export const signInWithEmail = async ({ email, password }: SignInFormData) => {
         const response = await auth.api.signInEmail({ body: { email, password } })
 
         return { success: true, data: response }
-    } catch (e) {
-        console.log('Sign in failed', e)
-        return { success: false, error: 'Sign in failed' }
+    } catch (e: any) {
+        console.error('Sign in failed:', e)
+        const errorMessage = e?.message || 'Invalid email or password. Please try again.'
+        return { success: false, error: errorMessage }
     }
 }
 
 export const signOut = async () => {
     try {
         await auth.api.signOut({ headers: await headers() });
-    } catch (e) {
-        console.log('Sign out failed', e)
-        return { success: false, error: 'Sign out failed' }
+        return { success: true }
+    } catch (e: any) {
+        console.error('Sign out failed:', e)
+        const errorMessage = e?.message || 'Sign out failed. Please try again.'
+        return { success: false, error: errorMessage }
     }
 }

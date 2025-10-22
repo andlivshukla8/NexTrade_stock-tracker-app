@@ -16,22 +16,30 @@ if(!cached) {
 }
 
 export const connectToDatabase = async () => {
-    if(!MONGODB_URI) throw new Error('MONGODB_URI must be set within .env');
+    if(!MONGODB_URI) {
+        throw new Error('MONGODB_URI environment variable is not set. Please check your .env file.');
+    }
 
     if(cached.conn) return cached.conn;
 
     if(!cached.promise) {
-        cached.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
+        const opts = {
+            bufferCommands: false,
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        };
+        cached.promise = mongoose.connect(MONGODB_URI, opts);
     }
 
     try {
         cached.conn = await cached.promise;
+        console.log(`✅ Connected to MongoDB database (${process.env.NODE_ENV})`);
     } catch (err) {
         cached.promise = null;
-        throw err;
+        console.error('❌ MongoDB connection failed:', err);
+        throw new Error(`Failed to connect to MongoDB: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-
-    console.log(`Connected to database ${process.env.NODE_ENV} - ${MONGODB_URI}`);
 
     return cached.conn;
 }

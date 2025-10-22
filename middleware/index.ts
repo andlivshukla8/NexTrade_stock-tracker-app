@@ -5,7 +5,15 @@ export async function middleware(request: NextRequest) {
     const sessionCookie = getSessionCookie(request);
 
     if (!sessionCookie) {
-        return NextResponse.redirect(new URL("/", request.url));
+        // Only redirect if the request is not for auth pages or API routes
+        const { pathname } = request.nextUrl;
+        if (!pathname.startsWith('/sign-in') && 
+            !pathname.startsWith('/sign-up') && 
+            !pathname.startsWith('/api/') &&
+            !pathname.startsWith('/_next/') &&
+            !pathname.startsWith('/assets/')) {
+            return NextResponse.redirect(new URL("/sign-in", request.url));
+        }
     }
 
     return NextResponse.next();
