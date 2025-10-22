@@ -22,9 +22,9 @@ export const signUpWithEmail = async ({ email, password, fullName, country, inve
         }
 
         return { success: true, data: response }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Sign up failed:', e)
-        const errorMessage = e?.message || 'Sign up failed. Please try again.'
+        const errorMessage = e instanceof Error ? e.message : 'Sign up failed. Please try again.'
         return { success: false, error: errorMessage }
     }
 }
@@ -34,9 +34,9 @@ export const signInWithEmail = async ({ email, password }: SignInFormData) => {
         const response = await auth.api.signInEmail({ body: { email, password } })
 
         return { success: true, data: response }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Sign in failed:', e)
-        const errorMessage = e?.message || 'Invalid email or password. Please try again.'
+        const errorMessage = e instanceof Error ? e.message : 'Invalid email or password. Please try again.'
         return { success: false, error: errorMessage }
     }
 }
@@ -45,9 +45,9 @@ export const signOut = async () => {
     try {
         await auth.api.signOut({ headers: await headers() });
         return { success: true }
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('Sign out failed:', e)
-        const errorMessage = e?.message || 'Sign out failed. Please try again.'
+        const errorMessage = e instanceof Error ? e.message : 'Sign out failed. Please try again.'
         return { success: false, error: errorMessage }
     }
 }
