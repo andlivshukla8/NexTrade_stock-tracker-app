@@ -23,7 +23,7 @@ export const sendWelcomeEmail = async ({ email, name, intro }: WelcomeEmailData)
         .replace('{{intro}}', intro);
 
     const mailOptions = {
-        from: `"NexTrade" <nextrade@jsmastery.pro>`,
+        from: `"NexTrade" <nextrade@andlivshukla>`,
         to: email,
         subject: `Welcome to NexTrade - your stock market toolkit is ready!`,
         text: 'Thanks for joining NexTrade',
@@ -41,7 +41,7 @@ export const sendNewsSummaryEmail = async (
         .replace('{{newsContent}}', newsContent);
 
     const mailOptions = {
-        from: `"NexTrade News" <nextrade@jsmastery.pro>`,
+        from: `"NexTrade News" <nextrade@andlivshukla>`,
         to: email,
         subject: `📈 Market News Summary Today - ${date}`,
         text: `Today's market news summary from NexTrade`,
