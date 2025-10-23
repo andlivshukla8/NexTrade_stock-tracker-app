@@ -19,25 +19,33 @@ export const sendSignUpEmail = inngest.createFunction(
 
         const prompt = PERSONALIZED_WELCOME_EMAIL_PROMPT.replace('{{userProfile}}', userProfile)
 
-        const response = await step.ai.infer('generate-welcome-intro', {
-            model: step.ai.models.gemini({ model: 'gemini-2.5-flash-lite' }),
-            body: {
-                contents: [
-                    {
-                        role: 'user',
-                        parts: [
-                            { text: prompt }
-                        ]
-                    }]
+        // Graceful fallback if Gemini API key is not configured
+        const hasGemini = !!process.env.GEMINI_API_KEY;
+        let introText = 'Thanks for joining NexTrade. You now have the tools to track markets and make smarter moves.';
+
+        if (hasGemini) {
+            try {
+                const response = await step.ai.infer('generate-welcome-intro', {
+                    model: step.ai.models.gemini({ model: 'gemini-2.5-flash-lite' }),
+                    body: {
+                        contents: [
+                            {
+                                role: 'user',
+                                parts: [
+                                    { text: prompt }
+                                ]
+                            }]
+                    }
+                });
+                const part = response.candidates?.[0]?.content?.parts?.[0];
+                introText = (part && 'text' in part ? part.text : null) || introText;
+            } catch (e) {
+                console.warn('sendSignUpEmail: AI intro generation skipped due to error or missing config. Falling back to default.');
             }
-        })
+        }
 
         await step.run('send-welcome-email', async () => {
-            const part = response.candidates?.[0]?.content?.parts?.[0];
-            const introText = (part && 'text' in part ? part.text : null) ||'Thanks for joining NexTrade. You now have the tools to track markets and make smarter moves.'
-
             const { data: { email, name } } = event;
-
             return await sendWelcomeEmail({ email, name, intro: introText });
         })
 
@@ -83,8 +91,13 @@ export const sendDailyNewsSummary = inngest.createFunction(
         // Step #3: (placeholder) Summarize news via AI
         const userNewsSummaries: { user: UserForNewsEmail; newsContent: string | null }[] = [];
 
+        const hasGemini = !!process.env.GEMINI_API_KEY;
         for (const { user, articles } of results) {
             try {
+                if (!hasGemini) {
+                    userNewsSummaries.push({ user, newsContent: 'No market news.' });
+                    continue;
+                }
                 const prompt = NEWS_SUMMARY_EMAIL_PROMPT.replace('{{newsData}}', JSON.stringify(articles, null, 2));
 
                 const response = await step.ai.infer(`summarize-news-${user.email}`, {
